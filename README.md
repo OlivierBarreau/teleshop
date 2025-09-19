@@ -67,6 +67,40 @@ curl http://localhost:8080/notifications
 - Packaging via Maven, image Docker basée sur Temurin JRE 17
 - JPA `ddl-auto=update` (pour le TP; en prod, utiliser des migrations)
 
+## Tests
+
+Couverture minimale par service:
+- `user-service`
+  - Data JPA: `UserRepositoryTest` (H2)
+  - Web MVC: `UserControllerTest` (MockMvc + @MockBean)
+- `order-service`
+  - Data JPA: `OrderRepositoryTest`
+  - Web MVC: `OrderControllerTest` (vérifie la publication d’évènement)
+- `inventory-service`
+  - Data JPA: `ProductRepositoryTest`
+  - Web MVC: `InventoryControllerTest`
+  - Unit (Mockito): `InventoryListenerTest` (réduction du stock + publish `stock.updated`)
+- `notification-service`
+  - Data JPA: `NotificationRepositoryTest` (inclut `deleteByUserId`)
+  - Web MVC: `NotificationControllerTest`
+  - Unit (Mockito): `NotificationListenerTest` (réagit à `order.created`, `stock.updated`, `user.deleted`)
+- `gateway`
+  - Smoke: `GatewayApplicationTests` (contextLoads)
+
+Exécution des tests (depuis la racine, un service à la fois):
+```bash
+pushd user-service && mvn -q test && popd
+pushd order-service && mvn -q test && popd
+pushd inventory-service && mvn -q test && popd
+pushd notification-service && mvn -q test && popd
+pushd gateway && mvn -q test && popd
+```
+
+Notes:
+- Chaque service utilise H2 en test; pas besoin de Postgres/RabbitMQ.
+- Les tests `@WebMvcTest` simulent (mock) les dépendances; les listeners sont testés en pur Mockito.
+- Maven au niveau racine n’a pas de POM agrégateur; lancer `mvn test` dans chaque module (voir ci-dessus). Un POM parent peut être ajouté ultérieurement si besoin.
+
 ## Extensions (pour aller plus loin)
 - Ajouter `payment-service` (évènement `OrderPaid`)
 - Ajouter `shipping-service` (évènement `OrderShipped`)
