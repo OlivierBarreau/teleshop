@@ -6,6 +6,11 @@ public class StockUpdated {
     private Integer quantity;
 
     public StockUpdated() {}
+    public StockUpdated(Long orderId, Long productId, Integer quantity) {
+        this.orderId = orderId;
+        this.productId = productId;
+        this.quantity = quantity;
+    }
 
     public Long getOrderId() { return orderId; }
     public void setOrderId(Long orderId) { this.orderId = orderId; }
