@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: jdbc:postgresql://notification-postgres:5432/notificationdb
+    username: notification
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+server:
+  port: 8080

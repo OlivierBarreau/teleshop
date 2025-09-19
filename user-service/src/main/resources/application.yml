@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: user-service
+  datasource:
+    url: jdbc:postgresql://user-postgres:5432/userdb
+    username: user
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+server:
+  port: 8080
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: inventory-service
+  datasource:
+    url: jdbc:postgresql://inventory-postgres:5432/inventorydb
+    username: inventory
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+server:
+  port: 8080
