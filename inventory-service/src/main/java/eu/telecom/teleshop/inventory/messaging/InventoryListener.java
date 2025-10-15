@@ -21,7 +21,7 @@ public class InventoryListener {
         this.productRepository = productRepository;
         this.rabbitTemplate = rabbitTemplate;
     }
-
+    // Listen to OrderCreated events
     @RabbitListener(queues = RabbitConfig.ORDER_CREATED_QUEUE)
     public void handleOrderCreated(OrderCreated event) {
         Optional<Product> productOpt = productRepository.findById(event.getProductId());

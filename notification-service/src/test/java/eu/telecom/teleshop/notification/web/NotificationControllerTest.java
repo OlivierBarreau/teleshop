@@ -35,4 +35,16 @@ class NotificationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].type").value("ORDER_CREATED"));
     }
+
+    @Test
+    void listByUserId_returns_notifications_for_user() throws Exception {
+        when(repository.findByUserId(1L)).thenReturn(List.of(
+                new Notification("ORDER_CREATED", "msg1", 1L),
+                new Notification("STOCK_UPDATED", "msg2", 1L)
+        ));
+
+        mockMvc.perform(get("/notifications/users/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].userId").value(1L));
+    }
 }
