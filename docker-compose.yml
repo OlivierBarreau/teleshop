@@ -57,6 +57,18 @@ services:
       timeout: 5s
       retries: 20
 
+  payment-postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: paymentdb
+      POSTGRES_USER: payment
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payment -d paymentdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   user-service:
     build: ./user-service
     depends_on:
@@ -89,6 +101,14 @@ services:
       rabbitmq:
         condition: service_started
 
+  payment-service:
+    build: ./payment-service
+    depends_on:
+      payment-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
   gateway:
     build: ./gateway
     ports:
@@ -98,3 +118,4 @@ services:
       - order-service
       - inventory-service
       - notification-service
+      - payment-service
