@@ -8,6 +8,8 @@ Ce projet est un TP d'introduction aux microservices avec Spring Boot 3+, Java 1
 - `order-service` (commandes, publie `OrderCreated`)
 - `inventory-service` (stock, consomme `OrderCreated`, publie `StockUpdated`)
 - `notification-service` (notifications, consomme `OrderCreated` et `StockUpdated`)
+- `payment-service` (paiements, consomme `OrderCreated`, publie `OrderPaid`)
+- `shipping-service` (expédition, consomme `OrderPaid`, publie `OrderShipped`)
 
 ## Architecture
 - API Gateway expose les routes:
@@ -15,9 +17,13 @@ Ce projet est un TP d'introduction aux microservices avec Spring Boot 3+, Java 1
   - `/orders/**` → `order-service`
   - `/inventory/**` → `inventory-service`
   - `/notifications/**` → `notification-service`
+  - `/payments/**` → `payment-service`
+  - `/shipments/**` → `shipping-service`
 - Communication asynchrone via RabbitMQ (topic exchange `teleshop.exchange`)
-  - `order.created` → consommé par `inventory-service` et `notification-service`
+  - `order.created` → consommé par `inventory-service`, `notification-service`, et `payment-service`
   - `stock.updated` → consommé par `notification-service`
+  - `order.paid` → consommé par `shipping-service`
+  - `order.shipped` → disponible pour d'autres services
 - 1 base Postgres par service (via Docker Compose)
 
 ## Lancer le projet
@@ -62,6 +68,28 @@ curl http://localhost:8080/inventory/products
 curl http://localhost:8080/notifications
 ```
 
+- Lister les paiements
+```bash
+curl http://localhost:8080/payments
+```
+
+- Traiter un paiement (utiliser `pm_card_test` comme méthode pour simuler le succès)
+```bash
+curl -X POST http://localhost:8080/payments/1/process \
+  -H 'Content-Type: application/json' \
+  -d '{"paymentMethodId":"pm_card_test"}'
+```
+
+- Lister les expéditions
+```bash
+curl http://localhost:8080/shipments
+```
+
+- Expédier une commande
+```bash
+curl -X POST http://localhost:8080/shipments/1/ship
+```
+
 ## Notes techniques
 - Java 17, Spring Boot 3.2.x, Spring Cloud 2023.0.x (compatibilité stable)
 - Packaging via Maven, image Docker basée sur Temurin JRE 17
@@ -102,7 +130,7 @@ Notes:
 - Maven au niveau racine n’a pas de POM agrégateur; lancer `mvn test` dans chaque module (voir ci-dessus). Un POM parent peut être ajouté ultérieurement si besoin.
 
 ## Extensions (pour aller plus loin)
-- Ajouter `payment-service` (évènement `OrderPaid`)
-- Ajouter `shipping-service` (évènement `OrderShipped`)
-- Tracer les flux d’évènements (diagrammes, logs corrélés)
-- Tests d’intégration avec Testcontainers
+- ✅ Ajouté `payment-service` (évènement `OrderPaid`)
+- ✅ Ajouté `shipping-service` (évènement `OrderShipped`)
+- Tracer les flux d'évènements (diagrammes, logs corrélés)
+- Tests d'intégration avec Testcontainers

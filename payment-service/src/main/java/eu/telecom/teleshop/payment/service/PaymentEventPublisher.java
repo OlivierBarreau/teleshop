@@ -4,6 +4,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import eu.telecom.teleshop.payment.config.RabbitConfig;
+import eu.telecom.teleshop.payment.events.OrderPaid;
 import eu.telecom.teleshop.payment.events.PaymentCreated;
 import eu.telecom.teleshop.payment.events.PaymentFailed;
 import eu.telecom.teleshop.payment.events.PaymentSucceeded;
@@ -26,5 +27,9 @@ public class PaymentEventPublisher {
     
     public void publishPaymentFailed(PaymentFailed event) {
         rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, "payment.failed", event);
+    }
+    
+    public void publishOrderPaid(OrderPaid event) {
+        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, "order.paid", event);
     }
 }

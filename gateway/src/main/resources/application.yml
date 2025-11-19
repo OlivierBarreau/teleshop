@@ -24,6 +24,10 @@ spring:
           uri: http://payment-service:8080
           predicates:
             - Path=/payments/**
+        - id: shipping-service
+          uri: http://shipping-service:8080
+          predicates:
+            - Path=/shipments/**
 server:
   port: 8080
 management:

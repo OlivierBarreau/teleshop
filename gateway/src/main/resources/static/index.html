@@ -28,6 +28,8 @@
       <p>
         <a class="button" href="/inventory/products">GET /inventory/products</a>
         <a class="button" href="/notifications">GET /notifications</a>
+        <a class="button" href="/payments">GET /payments</a>
+        <a class="button" href="/shipments">GET /shipments</a>
       </p>
       <p>
         <a class="button" href="http://localhost:15672" target="_blank" rel="noreferrer">RabbitMQ UI</a>
@@ -61,6 +63,50 @@
         </div>
       </form>
       <pre id="out-order">Response will appear here…</pre>
+    </section>
+
+    <section class="card">
+      <h2>Payment Management</h2>
+      <form id="form-payment">
+        <div class="row">
+          <button type="button" id="btn-get-all-payments">GET /payments</button>
+          <button type="button" id="btn-get-payment">GET /payments/{id}</button>
+          <input style="width:6rem" name="paymentId" id="paymentId" placeholder="id" />
+        </div>
+        <label>Order ID <input style="width:10rem" name="orderId" id="orderId" placeholder="1" /></label>
+        <div class="row">
+          <button type="button" id="btn-get-payment-by-order">GET /payments/order/{orderId}</button>
+        </div>
+        <hr style="margin:1rem 0; opacity:0.3;">
+        <label>Payment ID to Process <input name="processPaymentId" id="processPaymentId" placeholder="1" required /></label>
+        <label>Payment Method ID <input name="paymentMethodId" id="paymentMethodId" placeholder="pm_card_visa" required /></label>
+        <div class="row">
+          <button type="button" id="btn-process-payment">POST /payments/{id}/process</button>
+        </div>
+      </form>
+      <pre id="out-payment">Response will appear here…</pre>
+    </section>
+
+    <section class="card">
+      <h2>Shipping Management</h2>
+      <form id="form-shipping">
+        <div class="row">
+          <button type="button" id="btn-get-all-shipments">GET /shipments</button>
+          <button type="button" id="btn-get-shipment">GET /shipments/{id}</button>
+          <input style="width:6rem" name="shipmentId" id="shipmentId" placeholder="id" />
+        </div>
+        <label>Order ID <input style="width:10rem" name="shippingOrderId" id="shippingOrderId" placeholder="1" /></label>
+        <div class="row">
+          <button type="button" id="btn-get-shipment-by-order">GET /shipments/order/{orderId}</button>
+        </div>
+        <hr style="margin:1rem 0; opacity:0.3;">
+        <label>Shipment ID to Ship <input name="shipShipmentId" id="shipShipmentId" placeholder="1" /></label>
+        <div class="row">
+          <button type="button" id="btn-ship-order">POST /shipments/{id}/ship</button>
+          <button type="button" id="btn-deliver-order">POST /shipments/{id}/deliver</button>
+        </div>
+      </form>
+      <pre id="out-shipping">Response will appear here…</pre>
     </section>
   </div>
 
@@ -108,6 +154,94 @@
       payload.quantity = Number(payload.quantity);
       const result = await postJson('/orders', payload);
       document.getElementById('out-order').textContent = `HTTP ${result.status}\n${result.body}`;
+    });
+
+    document.getElementById('btn-get-all-orders').addEventListener('click', async () => {
+      const res = await fetch('/orders');
+      const text = await res.text();
+      let out;
+      try { out = JSON.stringify(JSON.parse(text), null, 2) } catch { out = text }
+      document.getElementById('out-order').textContent = `HTTP ${res.status}\n${out}`;
+    });
+
+    // Payment handlers
+    document.getElementById('btn-get-all-payments').addEventListener('click', async () => {
+      const res = await fetch('/payments');
+      const text = await res.text();
+      let out;
+      try { out = JSON.stringify(JSON.parse(text), null, 2) } catch { out = text }
+      document.getElementById('out-payment').textContent = `HTTP ${res.status}\n${out}`;
+    });
+
+    document.getElementById('btn-get-payment').addEventListener('click', async () => {
+      const id = document.getElementById('paymentId').value;
+      if (!id) { alert('Please enter a payment ID'); return; }
+      const res = await fetch(`/payments/${id}`);
+      const text = await res.text();
+      let out;
+      try { out = JSON.stringify(JSON.parse(text), null, 2) } catch { out = text }
+      document.getElementById('out-payment').textContent = `HTTP ${res.status}\n${out}`;
+    });
+
+    document.getElementById('btn-get-payment-by-order').addEventListener('click', async () => {
+      const orderId = document.getElementById('orderId').value;
+      if (!orderId) { alert('Please enter an order ID'); return; }
+      const res = await fetch(`/payments/order/${orderId}`);
+      const text = await res.text();
+      let out;
+      try { out = JSON.stringify(JSON.parse(text), null, 2) } catch { out = text }
+      document.getElementById('out-payment').textContent = `HTTP ${res.status}\n${out}`;
+    });
+
+    document.getElementById('btn-process-payment').addEventListener('click', async () => {
+      const id = document.getElementById('processPaymentId').value;
+      const paymentMethodId = document.getElementById('paymentMethodId').value;
+      if (!id || !paymentMethodId) { alert('Please enter both payment ID and payment method ID'); return; }
+      const result = await postJson(`/payments/${id}/process`, { paymentMethodId });
+      document.getElementById('out-payment').textContent = `HTTP ${result.status}\n${result.body}`;
+    });
+
+    // Shipping handlers
+    document.getElementById('btn-get-all-shipments').addEventListener('click', async () => {
+      const res = await fetch('/shipments');
+      const text = await res.text();
+      let out;
+      try { out = JSON.stringify(JSON.parse(text), null, 2) } catch { out = text }
+      document.getElementById('out-shipping').textContent = `HTTP ${res.status}\n${out}`;
+    });
+
+    document.getElementById('btn-get-shipment').addEventListener('click', async () => {
+      const id = document.getElementById('shipmentId').value;
+      if (!id) { alert('Please enter a shipment ID'); return; }
+      const res = await fetch(`/shipments/${id}`);
+      const text = await res.text();
+      let out;
+      try { out = JSON.stringify(JSON.parse(text), null, 2) } catch { out = text }
+      document.getElementById('out-shipping').textContent = `HTTP ${res.status}\n${out}`;
+    });
+
+    document.getElementById('btn-get-shipment-by-order').addEventListener('click', async () => {
+      const orderId = document.getElementById('shippingOrderId').value;
+      if (!orderId) { alert('Please enter an order ID'); return; }
+      const res = await fetch(`/shipments/order/${orderId}`);
+      const text = await res.text();
+      let out;
+      try { out = JSON.stringify(JSON.parse(text), null, 2) } catch { out = text }
+      document.getElementById('out-shipping').textContent = `HTTP ${res.status}\n${out}`;
+    });
+
+    document.getElementById('btn-ship-order').addEventListener('click', async () => {
+      const id = document.getElementById('shipShipmentId').value;
+      if (!id) { alert('Please enter a shipment ID'); return; }
+      const result = await postJson(`/shipments/${id}/ship`, {});
+      document.getElementById('out-shipping').textContent = `HTTP ${result.status}\n${result.body}`;
+    });
+
+    document.getElementById('btn-deliver-order').addEventListener('click', async () => {
+      const id = document.getElementById('shipShipmentId').value;
+      if (!id) { alert('Please enter a shipment ID'); return; }
+      const result = await postJson(`/shipments/${id}/deliver`, {});
+      document.getElementById('out-shipping').textContent = `HTTP ${result.status}\n${result.body}`;
     });
   </script>
 </body>

@@ -12,6 +12,8 @@ public class RabbitConfig {
     public static final String ORDER_CREATED_QUEUE = "notification.order.created";
     public static final String STOCK_UPDATED_QUEUE = "notification.stock.updated";
     public static final String USER_DELETED_QUEUE = "notification.user.deleted";
+    public static final String ORDER_PAID_QUEUE = "notification.order.paid";
+    public static final String ORDER_SHIPPED_QUEUE = "notification.order.shipped";
 
     @Bean
     public TopicExchange teleshopExchange() {
@@ -31,6 +33,16 @@ public class RabbitConfig {
     @Bean
     public Queue userDeletedQueue() {
         return QueueBuilder.durable(USER_DELETED_QUEUE).build();
+    }
+
+    @Bean
+    public Queue orderPaidQueue() {
+        return QueueBuilder.durable(ORDER_PAID_QUEUE).build();
+    }
+
+    @Bean
+    public Queue orderShippedQueue() {
+        return QueueBuilder.durable(ORDER_SHIPPED_QUEUE).build();
     }
 
     @Bean
@@ -55,6 +67,22 @@ public class RabbitConfig {
         return BindingBuilder.bind(userDeletedQueue)
                 .to(teleshopExchange)
                 .with("user.deleted");
+    }
+
+    @Bean
+    public Binding orderPaidBinding(@Qualifier("orderPaidQueue") Queue orderPaidQueue,
+                                     TopicExchange teleshopExchange) {
+        return BindingBuilder.bind(orderPaidQueue)
+                .to(teleshopExchange)
+                .with("order.paid");
+    }
+
+    @Bean
+    public Binding orderShippedBinding(@Qualifier("orderShippedQueue") Queue orderShippedQueue,
+                                        TopicExchange teleshopExchange) {
+        return BindingBuilder.bind(orderShippedQueue)
+                .to(teleshopExchange)
+                .with("order.shipped");
     }
 
     @Bean

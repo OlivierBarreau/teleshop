@@ -1,5 +1,6 @@
 package eu.telecom.teleshop.payment.messaging;
 
+import eu.telecom.teleshop.payment.events.OrderCreated;
 import eu.telecom.teleshop.payment.service.PaymentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,7 @@ public class OrderListener {
     }
     
     @RabbitHandler
-    public void handleOrderCreated(OrderCreatedEvent event) {
+    public void handleOrderCreated(OrderCreated event) {
         log.info("Received order created event: {}", event);
         
         try {
@@ -33,34 +34,6 @@ public class OrderListener {
             
         } catch (Exception e) {
             log.error("Failed to create payment for order {}: {}", event.getOrderId(), e.getMessage());
-        }
-    }
-    
-    // Inner class to match OrderCreated event structure
-    public static class OrderCreatedEvent {
-        private Long orderId;
-        private Long userId;
-        private Long productId;
-        private Integer quantity;
-
-        public OrderCreatedEvent() {}
-
-        public Long getOrderId() { return orderId; }
-        public void setOrderId(Long orderId) { this.orderId = orderId; }
-        
-        public Long getUserId() { return userId; }
-        public void setUserId(Long userId) { this.userId = userId; }
-        
-        public Long getProductId() { return productId; }
-        public void setProductId(Long productId) { this.productId = productId; }
-        
-        public Integer getQuantity() { return quantity; }
-        public void setQuantity(Integer quantity) { this.quantity = quantity; }
-        
-        @Override
-        public String toString() {
-            return "OrderCreatedEvent{orderId=" + orderId + ", userId=" + userId + 
-                   ", productId=" + productId + ", quantity=" + quantity + "}";
         }
     }
 }

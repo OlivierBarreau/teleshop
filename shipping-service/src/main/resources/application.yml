@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: shipping-service
+  datasource:
+    url: jdbc:postgresql://shipping-postgres:5432/shippingdb
+    username: shipping
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+server:
+  port: 8080

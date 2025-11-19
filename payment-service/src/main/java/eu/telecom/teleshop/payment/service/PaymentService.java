@@ -1,5 +1,6 @@
 package eu.telecom.teleshop.payment.service;
 
+import eu.telecom.teleshop.payment.events.OrderPaid;
 import eu.telecom.teleshop.payment.events.PaymentCreated;
 import eu.telecom.teleshop.payment.events.PaymentFailed;
 import eu.telecom.teleshop.payment.events.PaymentSucceeded;
@@ -80,6 +81,15 @@ public class PaymentService {
                     payment.getAmount()
                 );
                 eventPublisher.publishPaymentSucceeded(event);
+                
+                // Publish OrderPaid event for downstream services (shipping)
+                OrderPaid orderPaidEvent = new OrderPaid(
+                    payment.getOrderId(),
+                    payment.getUserId(),
+                    payment.getId(),
+                    payment.getAmount()
+                );
+                eventPublisher.publishOrderPaid(orderPaidEvent);
             } else {
                 // Simulate failure
                 payment.setStatus(PaymentStatus.FAILED);
