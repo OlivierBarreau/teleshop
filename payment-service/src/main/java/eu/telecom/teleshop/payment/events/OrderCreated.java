@@ -8,13 +8,6 @@ public class OrderCreated {
 
     public OrderCreated() {}
 
-    public OrderCreated(Long orderId, Long userId, Long productId, Integer quantity) {
-        this.orderId = orderId;
-        this.userId = userId;
-        this.productId = productId;
-        this.quantity = quantity;
-    }
-
     public Long getOrderId() { return orderId; }
     public void setOrderId(Long orderId) { this.orderId = orderId; }
     public Long getUserId() { return userId; }

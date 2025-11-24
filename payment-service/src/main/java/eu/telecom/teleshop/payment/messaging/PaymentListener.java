@@ -4,22 +4,21 @@ import eu.telecom.teleshop.payment.events.OrderCreated;
 import eu.telecom.teleshop.payment.service.PaymentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
+import eu.telecom.teleshop.payment.config.RabbitConfig;
 
 @Component
-@RabbitListener(queues = "payment.order.created")
-public class OrderListener {
+public class PaymentListener {
     
-    private static final Logger log = LoggerFactory.getLogger(OrderListener.class);
+    private static final Logger log = LoggerFactory.getLogger(PaymentListener.class);
     private final PaymentService paymentService;
     
-    public OrderListener(PaymentService paymentService) {
+    public PaymentListener(PaymentService paymentService) {
         this.paymentService = paymentService;
     }
     
-    @RabbitHandler
+    @RabbitListener(queues = RabbitConfig.ORDER_CREATED_QUEUE)
     public void handleOrderCreated(OrderCreated event) {
         log.info("Received order created event: {}", event);
         

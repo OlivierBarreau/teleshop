@@ -4,10 +4,12 @@ import eu.telecom.teleshop.order.events.OrderCreated;
 import eu.telecom.teleshop.order.model.Order;
 import eu.telecom.teleshop.order.repository.OrderRepository;
 import eu.telecom.teleshop.order.service.OrderEventPublisher;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -28,6 +30,11 @@ public class OrderController {
         Order saved = orderRepository.save(order);
         publisher.publishOrderCreated(new OrderCreated(saved.getId(), saved.getUserId(), saved.getProductId(), saved.getQuantity()));
         return ResponseEntity.created(URI.create("/orders/" + saved.getId())).body(saved);
+    }
+
+    @GetMapping
+    public List<Order> getAll() {
+        return orderRepository.findAll();
     }
 
     @GetMapping("/{id}")

@@ -28,6 +28,12 @@ public class UserController {
         return ResponseEntity.created(URI.create("/users/" + saved.getId())).body(saved);
     }
 
+    @GetMapping
+    public ResponseEntity<Iterable<User>> getAll() {
+        Iterable<User> users = userRepository.findAll();
+        return ResponseEntity.ok(users);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<User> getById(@PathVariable Long id) {
         Optional<User> user = userRepository.findById(id);

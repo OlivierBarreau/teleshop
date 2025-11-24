@@ -14,6 +14,9 @@ public class RabbitConfig {
     public static final String USER_DELETED_QUEUE = "notification.user.deleted";
     public static final String ORDER_PAID_QUEUE = "notification.order.paid";
     public static final String ORDER_SHIPPED_QUEUE = "notification.order.shipped";
+    public static final String PAYMENT_CREATED_QUEUE = "notification.payment.created";
+    public static final String PAYMENT_SUCCEEDED_QUEUE = "notification.payment.succeeded";
+    public static final String PAYMENT_FAILED_QUEUE = "notification.payment.failed";
 
     @Bean
     public TopicExchange teleshopExchange() {
@@ -43,6 +46,21 @@ public class RabbitConfig {
     @Bean
     public Queue orderShippedQueue() {
         return QueueBuilder.durable(ORDER_SHIPPED_QUEUE).build();
+    }
+
+    @Bean
+    public Queue paymentCreatedQueue() {
+        return QueueBuilder.durable(PAYMENT_CREATED_QUEUE).build();
+    }
+
+    @Bean
+    public Queue paymentSucceededQueue() {
+        return QueueBuilder.durable(PAYMENT_SUCCEEDED_QUEUE).build();
+    }
+
+    @Bean
+    public Queue paymentFailedQueue() {
+        return QueueBuilder.durable(PAYMENT_FAILED_QUEUE).build();
     }
 
     @Bean
@@ -83,6 +101,30 @@ public class RabbitConfig {
         return BindingBuilder.bind(orderShippedQueue)
                 .to(teleshopExchange)
                 .with("order.shipped");
+    }
+
+    @Bean
+    public Binding paymentCreatedBinding(@Qualifier("paymentCreatedQueue") Queue paymentCreatedQueue,
+                                        TopicExchange teleshopExchange) {
+        return BindingBuilder.bind(paymentCreatedQueue)
+                .to(teleshopExchange)
+                .with("payment.created");
+    }
+
+    @Bean
+    public Binding paymentSucceededBinding(@Qualifier("paymentSucceededQueue") Queue paymentSucceededQueue,
+                                          TopicExchange teleshopExchange) {
+        return BindingBuilder.bind(paymentSucceededQueue)
+                .to(teleshopExchange)
+                .with("payment.succeeded");
+    }
+
+    @Bean
+    public Binding paymentFailedBinding(@Qualifier("paymentFailedQueue") Queue paymentFailedQueue,
+                                       TopicExchange teleshopExchange) {
+        return BindingBuilder.bind(paymentFailedQueue)
+                .to(teleshopExchange)
+                .with("payment.failed");
     }
 
     @Bean

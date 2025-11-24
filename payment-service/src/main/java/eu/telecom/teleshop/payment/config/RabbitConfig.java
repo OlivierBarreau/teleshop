@@ -12,8 +12,6 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitConfig {
     public static final String EXCHANGE = "teleshop.exchange";
     public static final String ORDER_CREATED_QUEUE = "payment.order.created";
-    public static final String PAYMENT_SUCCEEDED_QUEUE = "payment.order.succeeded";
-    public static final String PAYMENT_FAILED_QUEUE = "payment.order.failed";
 
     @Bean
     public TopicExchange teleshopExchange() {

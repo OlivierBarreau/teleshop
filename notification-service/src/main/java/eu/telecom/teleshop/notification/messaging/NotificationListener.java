@@ -5,6 +5,9 @@ import eu.telecom.teleshop.notification.events.OrderPaid;
 import eu.telecom.teleshop.notification.events.OrderShipped;
 import eu.telecom.teleshop.notification.events.StockUpdated;
 import eu.telecom.teleshop.notification.events.UserDeleted;
+import eu.telecom.teleshop.notification.events.PaymentCreated;
+import eu.telecom.teleshop.notification.events.PaymentFailed;
+import eu.telecom.teleshop.notification.events.PaymentSucceeded;
 import eu.telecom.teleshop.notification.model.Notification;
 import eu.telecom.teleshop.notification.repository.NotificationRepository;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -42,6 +45,30 @@ public class NotificationListener {
         System.out.println("[Notification] " + msg);
     }
 
+    @RabbitListener(queues = "notification.payment.created")
+    public void onPaymentCreated(PaymentCreated event) {
+        String msg = String.format("Payment %d created for order %d by user %d - Amount: €%.2f",
+                event.getPaymentId(), event.getOrderId(), event.getUserId(), event.getAmount() / 100.0);
+        repository.save(new Notification("PAYMENT_CREATED", msg, event.getUserId()));
+        System.out.println("[Notification] " + msg);
+    }
+
+    @RabbitListener(queues = "notification.payment.succeeded")
+    public void onPaymentSucceeded(PaymentSucceeded event) {
+        String msg = String.format("Payment succeeded for order %d by user %d - Payment ID: %d, Amount: €%.2f",
+                event.getOrderId(), event.getUserId(), event.getPaymentId(), event.getAmount() / 100.0);
+        repository.save(new Notification("PAYMENT_SUCCEEDED", msg, event.getUserId()));
+        System.out.println("[Notification] " + msg);
+    }
+
+    @RabbitListener(queues = "notification.payment.failed")
+    public void onPaymentFailed(PaymentFailed event) {
+        String msg = String.format("Payment failed for order %d by user %d - Payment ID: %d, Amount: €%.2f",
+                event.getOrderId(), event.getUserId(), event.getPaymentId(), event.getAmount() / 100.0);
+        repository.save(new Notification("PAYMENT_FAILED", msg, event.getUserId()));
+        System.out.println("[Notification] " + msg);
+    }
+    
     @RabbitListener(queues = "notification.order.paid")
     public void onOrderPaid(OrderPaid event) {
         String msg = String.format("Order %d paid by user %d - Payment ID: %d, Amount: €%.2f",

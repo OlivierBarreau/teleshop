@@ -17,6 +17,7 @@ import java.util.UUID;
 public class PaymentService {
     
     private final PaymentRepository paymentRepository;
+    // private final MockPaymentsClient mockPaymentsClient;
     private final PaymentEventPublisher eventPublisher;
     
     public PaymentService(PaymentRepository paymentRepository, PaymentEventPublisher eventPublisher) {
@@ -127,4 +128,15 @@ public class PaymentService {
             throw new RuntimeException("Payment processing failed", e);
         }
     }
+
+        // TODO: Implement helper method to map PaymentIntentStatus to PaymentStatus
+    // private PaymentStatus mapPaymentIntentStatus(PaymentIntentStatus status) {
+    //     // Hint: Use switch statement to map:
+    //     // REQUIRES_PAYMENT_METHOD -> REQUIRES_PAYMENT_METHOD
+    //     // REQUIRES_CONFIRMATION -> REQUIRES_CONFIRMATION  
+    //     // PROCESSING -> PROCESSING
+    //     // SUCCEEDED -> SUCCEEDED
+    //     // CANCELED -> CANCELED
+    //     // default -> PENDING
+    // }
 }

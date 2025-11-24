@@ -59,6 +59,7 @@
         <label>Quantity <input name="quantity" type="number" min="1" value="1" required /></label>
         <div class="row">
           <button type="submit">POST /orders</button>
+          <button type="button" id="btn-get-all-orders">GET /orders</button>
           <a class="button" href="/notifications">View Notifications</a>
         </div>
       </form>
@@ -175,7 +176,8 @@
 
     document.getElementById('btn-get-payment').addEventListener('click', async () => {
       const id = document.getElementById('paymentId').value;
-      if (!id) { alert('Please enter a payment ID'); return; }
+      if (!id)
+       { alert('Please enter a payment ID'); return; }
       const res = await fetch(`/payments/${id}`);
       const text = await res.text();
       let out;
