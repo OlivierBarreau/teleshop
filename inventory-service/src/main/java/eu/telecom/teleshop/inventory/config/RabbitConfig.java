@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitConfig {
     public static final String EXCHANGE = "teleshop.exchange";
     public static final String ORDER_CREATED_QUEUE = "inventory.order.created";
+    public static final String ORDER_FAILED_QUEUE = "inventory.order.failed";
 
     @Bean
     public TopicExchange teleshopExchange() {
@@ -23,6 +24,16 @@ public class RabbitConfig {
     @Bean
     public Binding orderCreatedBinding(Queue orderCreatedQueue, TopicExchange teleshopExchange) {
         return BindingBuilder.bind(orderCreatedQueue).to(teleshopExchange).with("order.created");
+    }
+
+    @Bean
+    public Queue orderFailedQueue() {
+        return QueueBuilder.durable(ORDER_FAILED_QUEUE).build();
+    }
+
+    @Bean
+    public Binding orderFailedBinding(Queue orderFailedQueue, TopicExchange teleshopExchange) {
+        return BindingBuilder.bind(orderFailedQueue).to(teleshopExchange).with("order.failed");
     }
 
     @Bean
