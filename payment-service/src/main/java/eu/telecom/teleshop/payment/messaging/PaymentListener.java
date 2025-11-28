@@ -22,6 +22,11 @@ public class PaymentListener {
     public void handleOrderCreated(OrderCreated event) {
         log.info("Received order created event: {}", event);
         
+        if (event == null) {
+            log.warn("Received null order created event");
+            return;
+        }
+        
         try {
             // Calculate payment amount (€10.00 per item in cents)
             Integer amount = event.getQuantity() * 1000;
