@@ -112,6 +112,10 @@ Couverture minimale par service:
   - Data JPA: `NotificationRepositoryTest` (inclut `deleteByUserId`)
   - Web MVC: `NotificationControllerTest`
   - Unit (Mockito): `NotificationListenerTest` (réagit à `order.created`, `stock.updated`, `user.deleted`)
+- `payment-service`
+  - Unit (Mockito): `PaymentServiceTest` (création, traitement, gestion d'erreurs)
+  - Web MVC: `PaymentControllerTest` (endpoints REST, validation)
+  - Unit (Mockito): `OrderListenerTest` (consomme `order.created`, calcul montant)
 - `gateway`
   - Smoke: `GatewayApplicationTests` (contextLoads)
 
@@ -121,6 +125,7 @@ pushd user-service && mvn -q test && popd
 pushd order-service && mvn -q test && popd
 pushd inventory-service && mvn -q test && popd
 pushd notification-service && mvn -q test && popd
+pushd payment-service && mvn -q test && popd
 pushd gateway && mvn -q test && popd
 ```
 
