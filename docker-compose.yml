@@ -1,5 +1,14 @@
 version: '3.9'
 services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317:4317"    # OTLP gRPC receiver
+      - "4318:4318"    # OTLP HTTP receiver
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
   rabbitmq:
     image: rabbitmq:3-management
     ports:
@@ -83,56 +92,117 @@ services:
 
   user-service:
     build: ./user-service
+    environment:
+      OTEL_SERVICE_NAME: user-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
     depends_on:
       user-postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_started
+      jaeger:
+        condition: service_started
 
   order-service:
     build: ./order-service
+    environment:
+      OTEL_SERVICE_NAME: order-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
     depends_on:
       order-postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_started
+      jaeger:
+        condition: service_started
 
   inventory-service:
     build: ./inventory-service
+    environment:
+      OTEL_SERVICE_NAME: inventory-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
     depends_on:
       inventory-postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_started
+      jaeger:
+        condition: service_started
 
   notification-service:
     build: ./notification-service
+    environment:
+      OTEL_SERVICE_NAME: notification-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
     depends_on:
       notification-postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_started
+      jaeger:
+        condition: service_started
 
   payment-service:
     build: ./payment-service
+    environment:
+      OTEL_SERVICE_NAME: payment-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
     depends_on:
       payment-postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_started
+      jaeger:
+        condition: service_started
 
   shipping-service:
     build: ./shipping-service
+    environment:
+      OTEL_SERVICE_NAME: shipping-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
     depends_on:
       shipping-postgres:
         condition: service_healthy
       rabbitmq:
+        condition: service_started
+      jaeger:
         condition: service_started
 
   gateway:
     build: ./gateway
     ports:
       - "8080:8080"
+    environment:
+      OTEL_SERVICE_NAME: gateway
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
     depends_on:
       - user-service
       - order-service
@@ -140,3 +210,4 @@ services:
       - notification-service
       - payment-service
       - shipping-service
+      - jaeger

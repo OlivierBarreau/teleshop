@@ -17,6 +17,7 @@ public class RabbitConfig {
     public static final String PAYMENT_CREATED_QUEUE = "notification.payment.created";
     public static final String PAYMENT_SUCCEEDED_QUEUE = "notification.payment.succeeded";
     public static final String PAYMENT_FAILED_QUEUE = "notification.payment.failed";
+    public static final String ORDER_FAILED_QUEUE = "notification.order.failed";
 
     @Bean
     public TopicExchange teleshopExchange() {
@@ -61,6 +62,11 @@ public class RabbitConfig {
     @Bean
     public Queue paymentFailedQueue() {
         return QueueBuilder.durable(PAYMENT_FAILED_QUEUE).build();
+    }
+
+    @Bean
+    public Queue orderFailedQueue() {
+        return QueueBuilder.durable(ORDER_FAILED_QUEUE).build();
     }
 
     @Bean
@@ -125,6 +131,14 @@ public class RabbitConfig {
         return BindingBuilder.bind(paymentFailedQueue)
                 .to(teleshopExchange)
                 .with("payment.failed");
+    }
+
+    @Bean
+    public Binding orderFailedBinding(@Qualifier("orderFailedQueue") Queue orderFailedQueue,
+                                      TopicExchange teleshopExchange) {
+        return BindingBuilder.bind(orderFailedQueue)
+                .to(teleshopExchange)
+                .with("order.failed");
     }
 
     @Bean

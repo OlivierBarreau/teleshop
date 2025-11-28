@@ -1,6 +1,7 @@
 package eu.telecom.teleshop.notification.messaging;
 
 import eu.telecom.teleshop.notification.events.OrderCreated;
+import eu.telecom.teleshop.notification.events.OrderFailed;
 import eu.telecom.teleshop.notification.events.OrderPaid;
 import eu.telecom.teleshop.notification.events.OrderShipped;
 import eu.telecom.teleshop.notification.events.StockUpdated;
@@ -82,6 +83,14 @@ public class NotificationListener {
         String msg = String.format("Order %d shipped to user %d - Tracking: %s via %s",
                 event.getOrderId(), event.getUserId(), event.getTrackingNumber(), event.getCarrier());
         repository.save(new Notification("ORDER_SHIPPED", msg, event.getUserId()));
+        System.out.println("[Notification] " + msg);
+    }
+
+    @RabbitListener(queues = "notification.order.failed")
+    public void onOrderFailed(OrderFailed event) {
+        String msg = String.format("Order %d failed for user %d - Product %d x%d - Reason: %s",
+                event.getOrderId(), event.getUserId(), event.getProductId(), event.getQuantity(), event.getReason());
+        repository.save(new Notification("ORDER_FAILED", msg, event.getUserId()));
         System.out.println("[Notification] " + msg);
     }
 }

@@ -11,6 +11,11 @@ RUN bash -lc 'JAR=$(ls target/*.jar | grep -v original) && cp "$JAR" app.jar'
 # Run stage
 FROM eclipse-temurin:17-jre
 WORKDIR /app
+
+# Download OpenTelemetry Java agent
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.32.0/opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
+RUN chmod 644 /app/opentelemetry-javaagent.jar
+
 COPY --from=build /app/app.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+ENTRYPOINT ["java","-javaagent:/app/opentelemetry-javaagent.jar","-jar","/app/app.jar"]
