@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
@@ -27,5 +29,48 @@ class OrderRepositoryTest {
 
         Order found = repository.findById(saved.getId()).orElseThrow();
         assertThat(found.getStatus()).isEqualTo("CREATED");
+    }
+
+    @Test
+    void existsByUserIdAndStatusIn_returnsTrue_whenOpenOrderExists() {
+        // Given
+        Order order = new Order();
+        order.setUserId(100L);
+        order.setProductId(1L);
+        order.setQuantity(1);
+        order.setStatus("CREATED");
+        repository.save(order);
+
+        // When
+        boolean exists = repository.existsByUserIdAndStatusIn(100L, List.of("CREATED"));
+
+        // Then
+        assertThat(exists).isTrue();
+    }
+
+    @Test
+    void existsByUserIdAndStatusIn_returnsFalse_whenNoOpenOrderExists() {
+        // Given
+        Order order = new Order();
+        order.setUserId(200L);
+        order.setProductId(1L);
+        order.setQuantity(1);
+        order.setStatus("COMPLETED");
+        repository.save(order);
+
+        // When
+        boolean exists = repository.existsByUserIdAndStatusIn(200L, List.of("CREATED"));
+
+        // Then
+        assertThat(exists).isFalse();
+    }
+
+    @Test
+    void existsByUserIdAndStatusIn_returnsFalse_whenUserHasNoOrders() {
+        // When
+        boolean exists = repository.existsByUserIdAndStatusIn(999L, List.of("CREATED"));
+
+        // Then
+        assertThat(exists).isFalse();
     }
 }

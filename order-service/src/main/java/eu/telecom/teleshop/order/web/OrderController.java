@@ -42,4 +42,28 @@ public class OrderController {
         Optional<Order> o = orderRepository.findById(id);
         return o.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/users/{userId}/open-exists")
+    public ResponseEntity<OpenOrdersExistsResponse> checkOpenOrdersExist(@PathVariable Long userId) {
+        boolean exists = orderRepository.existsByUserIdAndStatusIn(userId, List.of("CREATED"));
+        return ResponseEntity.ok(new OpenOrdersExistsResponse(exists));
+    }
+
+    public static class OpenOrdersExistsResponse {
+        private boolean exists;
+
+        public OpenOrdersExistsResponse() {}
+
+        public OpenOrdersExistsResponse(boolean exists) {
+            this.exists = exists;
+        }
+
+        public boolean isExists() {
+            return exists;
+        }
+
+        public void setExists(boolean exists) {
+            this.exists = exists;
+        }
+    }
 }
