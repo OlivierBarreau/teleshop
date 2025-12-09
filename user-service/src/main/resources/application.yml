@@ -19,3 +19,6 @@ management:
     web:
       exposure:
         include: health,info
+order:
+  service:
+    url: http://order-service:8080
