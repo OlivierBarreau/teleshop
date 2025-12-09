@@ -39,6 +39,8 @@ docker compose up --build
 
 ## Endpoints rapides (exemples)
 
+### Users
+
 - Créer un utilisateur
 ```bash
 curl -X POST http://localhost:8080/users/register \
@@ -51,6 +53,51 @@ curl -X POST http://localhost:8080/users/register \
 curl http://localhost:8080/users/1
 ```
 
+- Supprimer un utilisateur
+```bash
+curl -i -X DELETE http://localhost:8080/users/1
+```
+
+**Comportement:** `DELETE /users/{id}` retourne **409 Conflict** si l'utilisateur a des commandes ouvertes (status `CREATED`). Retourne **204 No Content** si aucune commande ouverte n'existe et la suppression réussit.
+
+**Exemples:**
+
+- Créer un utilisateur avec une commande ouverte (expect 409)
+```bash
+# 1. Créer l'utilisateur
+curl -X POST http://localhost:8080/users/register \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Eve","email":"eve@example.com","password":"secret"}'
+# Réponse: {"id":2,"name":"Eve","email":"eve@example.com","password":"secret"}
+
+# 2. Créer une commande pour cet utilisateur
+curl -X POST http://localhost:8080/orders \
+  -H 'Content-Type: application/json' \
+  -d '{"userId":2,"productId":1,"quantity":1}'
+
+# 3. Tenter de supprimer l'utilisateur (FAIL - 409)
+curl -i -X DELETE http://localhost:8080/users/2
+# Réponse: HTTP/1.1 409 Conflict
+# {"message":"User has open orders"}
+```
+
+- Créer un utilisateur sans commande (expect 204)
+```bash
+# 1. Créer l'utilisateur
+curl -X POST http://localhost:8080/users/register \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"NoOrders","email":"no@example.com","password":"x"}'
+# Réponse: {"id":3,"name":"NoOrders","email":"no@example.com","password":"x"}
+
+# 2. Supprimer l'utilisateur (SUCCESS - 204)
+curl -i -X DELETE http://localhost:8080/users/3
+# Réponse: HTTP/1.1 204 No Content
+```
+
+**Note:** "Commandes ouvertes" = commandes avec status `CREATED`. Configurable pour inclure d'autres statuts (`PAID`, `PROCESSING`) dans le futur.
+
+### Orders
+
 - Créer une commande (publie OrderCreated)
 ```bash
 curl -X POST http://localhost:8080/orders \
@@ -58,15 +105,21 @@ curl -X POST http://localhost:8080/orders \
   -d '{"userId":1,"productId":1,"quantity":2}'
 ```
 
+### Inventory
+
 - Lister les produits (stock)
 ```bash
 curl http://localhost:8080/inventory/products
 ```
 
+### Notifications
+
 - Lister les notifications
 ```bash
 curl http://localhost:8080/notifications
 ```
+
+### Payments
 
 - Lister les paiements
 ```bash
@@ -79,6 +132,8 @@ curl -X POST http://localhost:8080/payments/1/process \
   -H 'Content-Type: application/json' \
   -d '{"paymentMethodId":"pm_card_test"}'
 ```
+
+### Shipping
 
 - Lister les expéditions
 ```bash
