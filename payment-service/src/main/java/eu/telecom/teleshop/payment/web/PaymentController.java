@@ -6,6 +6,7 @@ import eu.telecom.teleshop.payment.client.PaymentMethod;
 import eu.telecom.teleshop.payment.exception.PaymentNotFoundException;
 import eu.telecom.teleshop.payment.model.Payment;
 import eu.telecom.teleshop.payment.repository.PaymentRepository;
+import eu.telecom.teleshop.payment.service.PaymentRetryService;
 import eu.telecom.teleshop.payment.service.PaymentService;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,11 +20,16 @@ public class PaymentController {
     private final PaymentService paymentService;
     private final PaymentRepository paymentRepository;
     private final MockPaymentsClient mockPaymentsClient;
+    private final PaymentRetryService paymentRetryService;
     
-    public PaymentController(PaymentService paymentService, PaymentRepository paymentRepository, MockPaymentsClient mockPaymentsClient) {
+    public PaymentController(PaymentService paymentService, 
+                           PaymentRepository paymentRepository, 
+                           MockPaymentsClient mockPaymentsClient,
+                           PaymentRetryService paymentRetryService) {
         this.paymentService = paymentService;
         this.paymentRepository = paymentRepository;
         this.mockPaymentsClient = mockPaymentsClient;
+        this.paymentRetryService = paymentRetryService;
     }
     
     @GetMapping
@@ -46,6 +52,24 @@ public class PaymentController {
     @PostMapping("/{id}/process")
     public Payment processPayment(@PathVariable Long id, @RequestBody ProcessPaymentRequest request) {
         return paymentService.processPayment(id, request.getPaymentMethodId());
+    }
+    
+    /**
+     * Process payment with automatic retry logic (exponential backoff)
+     * Retries up to 3 times with exponential backoff: 1s, 2s, 4s
+     */
+    @PostMapping("/{id}/process-with-retry")
+    public Payment processPaymentWithRetry(@PathVariable Long id, @RequestBody ProcessPaymentRequest request) {
+        return paymentRetryService.processPaymentWithRetry(id, request.getPaymentMethodId());
+    }
+    
+    /**
+     * Manually retry a failed payment
+     * Only works for payments in FAILED status
+     */
+    @PostMapping("/{id}/retry")
+    public Payment retryFailedPayment(@PathVariable Long id) {
+        return paymentRetryService.retryFailedPayment(id);
     }
     
     @PostMapping("/{id}/refresh")

@@ -6,6 +6,7 @@ import eu.telecom.teleshop.payment.exception.PaymentNotFoundException;
 import eu.telecom.teleshop.payment.model.Payment;
 import eu.telecom.teleshop.payment.model.PaymentStatus;
 import eu.telecom.teleshop.payment.repository.PaymentRepository;
+import eu.telecom.teleshop.payment.service.PaymentRetryService;
 import eu.telecom.teleshop.payment.service.PaymentService;
 import eu.telecom.teleshop.payment.web.ProcessPaymentRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +44,9 @@ class PaymentControllerTest {
     
     @MockBean
     private MockPaymentsClient mockPaymentsClient;
+    
+    @MockBean
+    private PaymentRetryService paymentRetryService;
 
     @Autowired
     private ObjectMapper objectMapper;
