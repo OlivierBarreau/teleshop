@@ -14,3 +14,10 @@ spring:
     port: 5672
 server:
   port: 8080
+
+# MockPayments API configuration
+mockpayments:
+  base-url: http://testr.telecomnancy.univ-lorraine.fr/mockpayment
+  api-key: test_123
+  webhook-url: http://localhost:8080/webhooks/mockpayments
+  return-url: http://localhost:8080/payment-return

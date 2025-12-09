@@ -1,6 +1,8 @@
 package eu.telecom.teleshop.payment.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.telecom.teleshop.payment.client.MockPaymentsClient;
+import eu.telecom.teleshop.payment.exception.PaymentNotFoundException;
 import eu.telecom.teleshop.payment.model.Payment;
 import eu.telecom.teleshop.payment.model.PaymentStatus;
 import eu.telecom.teleshop.payment.repository.PaymentRepository;
@@ -38,6 +40,9 @@ class PaymentControllerTest {
 
     @MockBean
     private PaymentRepository paymentRepository;
+    
+    @MockBean
+    private MockPaymentsClient mockPaymentsClient;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -162,7 +167,7 @@ class PaymentControllerTest {
         request.setPaymentMethodId("pm_test_456");
 
         when(paymentService.processPayment(eq(999L), eq("pm_test_456")))
-                .thenThrow(new RuntimeException("Payment not found"));
+                .thenThrow(new PaymentNotFoundException(999L));
 
         // When & Then
         mockMvc.perform(post("/payments/999/process")

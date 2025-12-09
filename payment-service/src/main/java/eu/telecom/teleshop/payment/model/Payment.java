@@ -33,6 +33,23 @@ public class Payment {
     
     private String failureReason;
     
+    // Additional fields for MockPayments integration
+    private String clientSecret;
+    
+    private String captureMethod;
+    
+    private String returnUrl;
+    
+    private String nextActionType;
+    
+    private String nextActionUrl;
+    
+    private String lastPaymentError;
+    
+    private String failureCode;
+    
+    private String failureParam;
+    
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
     
@@ -92,4 +109,53 @@ public class Payment {
     
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    
+    // Additional getters and setters for MockPayments integration
+    public String getClientSecret() { return clientSecret; }
+    public void setClientSecret(String clientSecret) { 
+        this.clientSecret = clientSecret;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    public String getCaptureMethod() { return captureMethod; }
+    public void setCaptureMethod(String captureMethod) { 
+        this.captureMethod = captureMethod;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    public String getReturnUrl() { return returnUrl; }
+    public void setReturnUrl(String returnUrl) { 
+        this.returnUrl = returnUrl;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    public String getNextActionType() { return nextActionType; }
+    public void setNextActionType(String nextActionType) { 
+        this.nextActionType = nextActionType;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    public String getNextActionUrl() { return nextActionUrl; }
+    public void setNextActionUrl(String nextActionUrl) { 
+        this.nextActionUrl = nextActionUrl;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    public String getLastPaymentError() { return lastPaymentError; }
+    public void setLastPaymentError(String lastPaymentError) { 
+        this.lastPaymentError = lastPaymentError;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    public String getFailureCode() { return failureCode; }
+    public void setFailureCode(String failureCode) { 
+        this.failureCode = failureCode;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    public String getFailureParam() { return failureParam; }
+    public void setFailureParam(String failureParam) { 
+        this.failureParam = failureParam;
+        this.updatedAt = LocalDateTime.now();
+    }
 }
