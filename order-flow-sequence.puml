@@ -1,0 +1,78 @@
+@startuml Order Creation Flow
+
+actor Client
+participant "Gateway" as GW
+participant "User Service" as US
+participant "Order Service" as OS
+participant "RabbitMQ" as MQ
+participant "Inventory Service" as IS
+participant "Payment Service" as PS
+participant "Notification Service" as NS
+participant "Shipping Service" as SS
+
+== User Registration ==
+Client -> GW: POST /users/register
+GW -> US: Forward request
+US -> US: Save user to DB
+US --> GW: 201 Created (User)
+GW --> Client: User created
+
+== Order Creation ==
+Client -> GW: POST /orders\n{userId, productId, quantity}
+GW -> OS: Forward request
+OS -> OS: Create order\nstatus: CREATED
+OS -> MQ: Publish "order.created" event
+OS --> GW: 201 Created (Order)
+GW --> Client: Order created
+
+== Inventory Processing ==
+MQ --> IS: Consume "order.created"
+IS -> IS: Check product stock
+alt Stock available
+  IS -> IS: Reduce stock quantity
+  IS -> MQ: Publish "stock.updated"
+  IS -> IS: Save to DB
+else Insufficient stock
+  IS -> IS: Log error
+end
+
+== Payment Processing ==
+MQ --> PS: Consume "order.created"
+PS -> PS: Create payment\nstatus: PENDING
+PS -> PS: Save to DB
+
+Client -> GW: POST /payments/{id}/process\n{paymentMethodId}
+GW -> PS: Forward request
+PS -> PS: Process payment with retry
+alt Payment succeeds
+  PS -> PS: Update status: SUCCEEDED
+  PS -> MQ: Publish "order.paid"
+  PS --> GW: 200 OK
+else Payment fails
+  PS -> PS: Update status: FAILED
+  PS --> GW: 400 Bad Request
+end
+GW --> Client: Payment result
+
+== Shipping Processing ==
+MQ --> SS: Consume "order.paid"
+SS -> SS: Create shipment\nstatus: PENDING
+SS -> SS: Save to DB
+
+Client -> GW: POST /shipments/{id}/ship
+GW -> SS: Forward request
+SS -> SS: Update status: SHIPPED
+SS -> MQ: Publish "order.shipped"
+SS --> GW: 200 OK
+GW --> Client: Shipment confirmed
+
+== Notification Processing ==
+MQ --> NS: Consume "order.created"
+NS -> NS: Create notification:\n"Order created"
+NS -> NS: Save to DB
+
+MQ --> NS: Consume "stock.updated"
+NS -> NS: Create notification:\n"Stock updated"
+NS -> NS: Save to DB
+
+@enduml

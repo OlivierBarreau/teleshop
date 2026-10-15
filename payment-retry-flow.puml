@@ -1,0 +1,106 @@
+@startuml Payment Retry Flow (Lab 2 - Step 12)
+
+actor Client
+participant "Gateway" as GW
+participant "Payment Controller" as PC
+participant "Payment Retry Service" as PRS
+participant "Payment Service" as PS
+participant "MockPayments API" as API
+database "Payment DB" as DB
+
+== Automatic Retry with Exponential Backoff ==
+
+Client -> GW: POST /payments/{id}/process-with-retry\n{paymentMethodId}
+GW -> PC: Forward request
+PC -> PRS: processPaymentWithRetry(id, methodId)
+
+PRS -> PRS: Configure RetryTemplate:\n- Max 3 attempts\n- Backoff: 1s → 2s → 4s
+
+group Retry Loop [Max 3 attempts]
+  PRS -> DB: Find payment by ID
+  DB --> PRS: Payment entity
+  
+  PRS -> PS: processPayment(id, methodId)
+  PS -> API: POST /payment-intents/{id}/attach
+  
+  alt Attempt 1 - Temporary failure
+    API --> PS: 500 Server Error
+    PS --> PRS: Exception thrown
+    PRS -> PRS: Wait 1 second (backoff)
+    note right: Retry attempt 1 of 3
+  end
+  
+  alt Attempt 2 - Still fails
+    PRS -> PS: processPayment(id, methodId)
+    PS -> API: POST /payment-intents/{id}/attach
+    API --> PS: 503 Service Unavailable
+    PS --> PRS: Exception thrown
+    PRS -> PRS: Wait 2 seconds (backoff)
+    note right: Retry attempt 2 of 3
+  end
+  
+  alt Attempt 3 - Success
+    PRS -> PS: processPayment(id, methodId)
+    PS -> API: POST /payment-intents/{id}/attach
+    API --> PS: 200 OK (Payment succeeded)
+    PS -> DB: Update payment status: SUCCEEDED
+    PS --> PRS: Payment succeeded
+    note right: Success on attempt 3
+  end
+end
+
+PRS --> PC: Payment result
+PC --> GW: 200 OK
+GW --> Client: Payment processed
+
+note over PRS
+  **Exponential Backoff:**
+  - Attempt 1: Immediate
+  - Attempt 2: Wait 1s
+  - Attempt 3: Wait 2s
+  - (If needed) Attempt 4: Wait 4s
+  
+  **Configuration:**
+  - Initial interval: 1000ms
+  - Multiplier: 2.0
+  - Max interval: 10000ms
+end note
+
+== Manual Retry for Failed Payment ==
+
+Client -> GW: POST /payments/{id}/retry
+GW -> PC: Forward request
+PC -> PRS: retryFailedPayment(id)
+
+PRS -> DB: Find payment by ID
+DB --> PRS: Payment (status: FAILED)
+
+alt Payment not in FAILED status
+  PRS --> PC: 400 Bad Request\n"Payment is not in FAILED status"
+  PC --> GW: 400 Bad Request
+  GW --> Client: Error
+else Payment is FAILED
+  PRS -> PRS: Extract paymentMethodId
+  
+  alt No payment method
+    PRS --> PC: 400 Bad Request\n"No payment method found"
+  else Has payment method
+    PRS -> PRS: Use retry template (same logic)
+    PRS -> PS: processPayment(id, methodId)
+    PS -> API: Retry payment
+    alt Success
+      API --> PS: 200 OK
+      PS --> PRS: SUCCEEDED
+      PRS --> PC: 200 OK
+    else Final failure
+      API --> PS: Error
+      PS --> PRS: FAILED
+      PRS --> PC: 400 Bad Request
+    end
+  end
+end
+
+PC --> GW: Response
+GW --> Client: Retry result
+
+@enduml

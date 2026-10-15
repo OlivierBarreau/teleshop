@@ -1,0 +1,63 @@
+@startuml User Deletion Guard (Lab 3)
+
+actor Client
+participant "Gateway" as GW
+participant "User Service" as US
+participant "Order Service" as OS
+participant "RabbitMQ" as MQ
+participant "Notification Service" as NS
+
+== Scenario 1: User with Open Orders (409 Conflict) ==
+
+Client -> GW: DELETE /users/{userId}
+GW -> US: Forward request
+US -> US: Find user by ID
+
+US -> OS: GET /orders/users/{userId}/open-exists\n(Synchronous HTTP)
+OS -> OS: Check if user has orders\nwith status "CREATED"
+OS --> US: {"exists": true}
+
+US -> US: User has open orders\nCANNOT DELETE
+US --> GW: 409 Conflict\n{"message": "User has open orders"}
+GW --> Client: 409 Conflict
+
+note over US, OS
+  **Synchronous Communication**
+  User Service queries Order Service
+  to check for open orders before deletion
+end note
+
+== Scenario 2: User without Orders (204 No Content) ==
+
+Client -> GW: DELETE /users/{userId}
+GW -> US: Forward request
+US -> US: Find user by ID
+
+US -> OS: GET /orders/users/{userId}/open-exists\n(Synchronous HTTP)
+OS -> OS: Check if user has orders\nwith status "CREATED"
+OS --> US: {"exists": false}
+
+US -> US: No open orders\nPROCEED with deletion
+US -> US: Delete user from DB
+US -> MQ: Publish "user.deleted" event
+US --> GW: 204 No Content
+GW --> Client: 204 No Content
+
+MQ --> NS: Consume "user.deleted"
+NS -> NS: Delete all notifications\nfor this user
+NS -> NS: Save changes to DB
+
+note over US
+  **Guard Logic:**
+  1. Check open orders (sync)
+  2. If exists → 409
+  3. If not → delete + publish event
+end note
+
+note over OS
+  **"Open Orders" Definition:**
+  Orders with status = "CREATED"
+  (Configurable in future)
+end note
+
+@enduml

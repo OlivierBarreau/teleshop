@@ -1,0 +1,73 @@
+@startuml Teleshop Microservices Architecture
+
+!define GATEWAY #LightBlue
+!define SERVICE #LightGreen
+!define DATABASE #LightYellow
+!define MESSAGEBUS #LightCoral
+
+' Components
+rectangle "API Gateway" as gateway GATEWAY
+rectangle "User Service" as user SERVICE
+rectangle "Order Service" as order SERVICE
+rectangle "Inventory Service" as inventory SERVICE
+rectangle "Payment Service" as payment SERVICE
+rectangle "Shipping Service" as shipping SERVICE
+rectangle "Notification Service" as notification SERVICE
+
+database "User DB\n(PostgreSQL)" as userdb DATABASE
+database "Order DB\n(PostgreSQL)" as orderdb DATABASE
+database "Inventory DB\n(PostgreSQL)" as inventorydb DATABASE
+database "Payment DB\n(PostgreSQL)" as paymentdb DATABASE
+database "Shipping DB\n(PostgreSQL)" as shippingdb DATABASE
+database "Notification DB\n(PostgreSQL)" as notificationdb DATABASE
+
+queue "RabbitMQ\n(Message Broker)" as rabbitmq MESSAGEBUS
+
+' Gateway connections
+gateway -down-> user : /users/**
+gateway -down-> order : /orders/**
+gateway -down-> inventory : /inventory/**
+gateway -down-> payment : /payments/**
+gateway -down-> shipping : /shipments/**
+gateway -down-> notification : /notifications/**
+
+' Synchronous communication
+user -right-> order : "Check open orders\n(HTTP GET)"
+
+' Database connections
+user -down-> userdb
+order -down-> orderdb
+inventory -down-> inventorydb
+payment -down-> paymentdb
+shipping -down-> shippingdb
+notification -down-> notificationdb
+
+' Asynchronous communication via RabbitMQ
+order -down-> rabbitmq : "Publish:\norder.created"
+inventory -down-> rabbitmq : "Publish:\nstock.updated"
+payment -down-> rabbitmq : "Publish:\norder.paid"
+shipping -down-> rabbitmq : "Publish:\norder.shipped"
+user -down-> rabbitmq : "Publish:\nuser.deleted"
+
+rabbitmq -down-> inventory : "Subscribe:\norder.created"
+rabbitmq -down-> payment : "Subscribe:\norder.created"
+rabbitmq -down-> notification : "Subscribe:\norder.created\nstock.updated\nuser.deleted"
+rabbitmq -down-> shipping : "Subscribe:\norder.paid"
+
+note right of gateway
+  Entry point for all
+  client requests
+end note
+
+note right of rabbitmq
+  Topic Exchange:
+  teleshop.exchange
+end note
+
+note left of user
+  Lab 3: Guards deletion
+  when open orders exist
+  (synchronous check)
+end note
+
+@enduml

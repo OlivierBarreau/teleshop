@@ -1,0 +1,191 @@
+@startuml Payment and Order Service Class Diagram
+
+' Payment Service
+package "payment-service" {
+    
+    ' Model Layer
+    class Payment {
+        - Long id
+        - String paymentIntentId
+        - Long orderId
+        - Long userId
+        - Integer amount
+        - String currency
+        - PaymentStatus status
+        - String paymentMethodId
+        - String failureReason
+        - String clientSecret
+        - String lastPaymentError
+        + Payment()
+        + getters/setters()
+    }
+    
+    enum PaymentStatus {
+        PENDING
+        REQUIRES_PAYMENT_METHOD
+        REQUIRES_CONFIRMATION
+        REQUIRES_ACTION
+        PROCESSING
+        SUCCEEDED
+        FAILED
+        CANCELED
+        REFUNDED
+    }
+    
+    ' Repository Layer
+    interface PaymentRepository <<@Repository>> {
+        + findByOrderId(Long): Optional<Payment>
+        + findByPaymentIntentId(String): Optional<Payment>
+    }
+    
+    ' Service Layer
+    class PaymentService <<@Service>> {
+        - PaymentRepository paymentRepository
+        - MockPaymentsClient mockPaymentsClient
+        - PaymentEventPublisher eventPublisher
+        + createPayment(Long, Long, Integer): Payment
+        + processPayment(Long, String): Payment
+        + confirmPayment(Long): Payment
+        + getPayment(Long): Payment
+    }
+    
+    class PaymentRetryService <<@Service>> {
+        - PaymentService paymentService
+        - PaymentRepository paymentRepository
+        - RetryTemplate paymentRetryTemplate
+        + processPaymentWithRetry(Long, String): Payment
+        - handleFinalFailure(Payment, Exception): Payment
+    }
+    
+    class PaymentEventPublisher <<@Service>> {
+        - RabbitTemplate rabbitTemplate
+        + publishPaymentCreated(PaymentCreated): void
+        + publishPaymentSucceeded(PaymentSucceeded): void
+        + publishPaymentFailed(PaymentFailed): void
+        + publishOrderPaid(OrderPaid): void
+    }
+    
+    ' Controller Layer
+    class PaymentController <<@RestController>> {
+        - PaymentService paymentService
+        - PaymentRepository paymentRepository
+        - PaymentRetryService paymentRetryService
+        + getAllPayments(): List<Payment>
+        + getPayment(Long): Payment
+        + getPaymentByOrderId(Long): Payment
+        + processPayment(Long, ProcessPaymentRequest): Payment
+    }
+    
+    ' Messaging Layer
+    class PaymentListener <<@Component>> {
+        - PaymentService paymentService
+        + handleOrderCreated(OrderCreated): void <<@RabbitListener>>
+    }
+    
+    ' Relationships
+    Payment --> PaymentStatus
+    PaymentRepository --|> JpaRepository
+    PaymentService --> PaymentRepository
+    PaymentService --> PaymentEventPublisher
+    PaymentRetryService --> PaymentService
+    PaymentRetryService --> PaymentRepository
+    PaymentController --> PaymentService
+    PaymentController --> PaymentRetryService
+    PaymentListener --> PaymentService
+}
+
+' Order Service
+package "order-service" {
+    
+    ' Model Layer
+    class Order {
+        - Long id
+        - Long userId
+        - Long productId
+        - Integer quantity
+        - String status
+        + Order()
+        + getters/setters()
+    }
+    
+    ' Repository Layer
+    interface OrderRepository <<@Repository>> {
+        + existsByUserIdAndStatusIn(Long, Collection<String>): boolean
+    }
+    
+    ' Service Layer
+    class OrderEventPublisher <<@Service>> {
+        - RabbitTemplate rabbitTemplate
+        + publishOrderCreated(OrderCreated): void
+        + publishOrderFailed(OrderFailed): void
+    }
+    
+    ' Controller Layer
+    class OrderController <<@RestController>> {
+        - OrderRepository orderRepository
+        - OrderEventPublisher publisher
+        + create(Order): ResponseEntity<Order>
+        + getAll(): List<Order>
+        + getById(Long): ResponseEntity<Order>
+        + checkOpenOrdersExist(Long): ResponseEntity<OpenOrdersExistsResponse>
+    }
+    
+    ' Messaging Layer
+    class OrderListener <<@Component>> {
+        - OrderRepository orderRepository
+        - OrderEventPublisher eventPublisher
+        + handlePaymentFailed(PaymentFailedEvent): void <<@RabbitListener>>
+    }
+    
+    ' Event Classes
+    class OrderCreated {
+        - Long orderId
+        - Long userId
+        - Long productId
+        - Integer quantity
+    }
+    
+    class OrderFailed {
+        - Long orderId
+        - Long userId
+        - Long productId
+        - Integer quantity
+        - String reason
+    }
+    
+    ' Relationships
+    OrderRepository --|> JpaRepository
+    OrderController --> OrderRepository
+    OrderController --> OrderEventPublisher
+    OrderListener --> OrderRepository
+    OrderListener --> OrderEventPublisher
+    OrderEventPublisher ..> OrderCreated : publishes
+    OrderEventPublisher ..> OrderFailed : publishes
+}
+
+' Cross-service relationships
+PaymentListener ..> OrderCreated : consumes
+OrderListener ..> PaymentEventPublisher : consumes PaymentFailed
+
+note right of PaymentRetryService
+  **Retry Logic with Exponential Backoff**
+  - Max 3 retry attempts
+  - Backoff: 1s, 2s, 4s
+  - Uses Spring RetryTemplate
+end note
+
+note right of PaymentService
+  **Core Payment Processing**
+  - Integrates with MockPayments API
+  - Creates payment intents
+  - Handles payment confirmation
+  - Publishes payment events
+end note
+
+note right of OrderController
+  **Lab 3: User Deletion Guard**
+  - Exposes endpoint to check open orders
+  - Used by user-service before deletion
+end note
+
+@enduml
